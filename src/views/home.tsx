@@ -15,12 +15,22 @@ const Home: React.FunctionComponent = () => {
                 </div>
                 <button onClick={() => console.log(value)}>Save</button>
             </Header>
+            <ToolBar>
+                <p onClick={() => console.log(value)}>Save</p>
+            </ToolBar>
             <Main>
                 <ReactQuill value={value} onChange={setValue} />
             </Main>
         </Container>
     )
 }
+
+const ToolBar = styled.div`
+    border-top: 1px solid white;
+    margin-bottom: 30px;
+    padding-left: 20px;
+    cursor: pointer;
+`
 
 const Container = styled.div`
     padding: 20px 30px;
@@ -29,7 +39,6 @@ const Container = styled.div`
 const Header = styled.header`
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
 
     div {
         display: flex;
