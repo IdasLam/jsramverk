@@ -2,35 +2,40 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import Tools from '../components/toolbar'
 
 const Home: React.FunctionComponent = () => {
-    const [value, setValue] = useState('')
+    const [value, setValue] = useState({ content: '', title: 'Title' })
+    const [showTitleInput, setShowTitleInput] = useState(false)
 
     return (
         <Container>
             <Header>
                 <div>
                     <img src="https://img.icons8.com/color-glass/48/000000/document.png" />
-                    <h1>JsRamverk</h1>
+
+                    {showTitleInput ? (
+                        <input
+                            type="text"
+                            onBlur={() => setShowTitleInput(false)}
+                            autoFocus
+                            onChange={(change) => setValue({ ...value, title: change.target.value || 'Title' })}
+                            defaultValue={value.title}
+                            maxLength={22}
+                        />
+                    ) : (
+                        <h1 onClick={() => setShowTitleInput(true)}>{value.title}</h1>
+                    )}
                 </div>
-                <button onClick={() => console.log(value)}>Save</button>
+                <button onClick={() => console.log(value.content)}>Save</button>
             </Header>
-            <ToolBar>
-                <p onClick={() => console.log(value)}>Save</p>
-            </ToolBar>
+            <Tools />
             <Main>
-                <ReactQuill value={value} onChange={setValue} />
+                <ReactQuill value={value.content} onChange={(change) => setValue({ ...value, content: change })} />
             </Main>
         </Container>
     )
 }
-
-const ToolBar = styled.div`
-    border-top: 1px solid white;
-    margin-bottom: 30px;
-    padding-left: 20px;
-    cursor: pointer;
-`
 
 const Container = styled.div`
     padding: 20px 30px;
@@ -63,6 +68,23 @@ const Header = styled.header`
 
     button:hover {
         background-color: #fffffff2;
+    }
+
+    input {
+        box-sizing: border-box;
+        background-color: transparent;
+        border: 2px solid black;
+        font-size: 2em;
+        margin: 0.67em 0;
+        padding: unset;
+        font-weight: bold;
+        font-family: sans-serif;
+    }
+
+    h1 {
+        box-sizing: border-box;
+        border: 2px solid transparent;
+        font-family: sans-serif;
     }
 `
 
