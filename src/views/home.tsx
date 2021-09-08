@@ -3,10 +3,32 @@ import styled from 'styled-components'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import Tools from '../components/toolbar'
+import * as document from '../helpers/document'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+function useQuery() {
+    return new URLSearchParams(useLocation().search)
+}
 
 const Home: React.FunctionComponent = () => {
-    const [value, setValue] = useState({ content: '', title: 'Title' })
+    const id = useQuery().get('id')
+    const [title, setTitle] = useState('New title')
+    const [content, setContent] = useState('')
     const [showTitleInput, setShowTitleInput] = useState(false)
+    const { isOneDocumentLoading, oneDocument } = document.getOne(id)
+    const saveDocument = document.save()
+
+    useEffect(() => {
+        setTitle('New Title')
+        setContent('')
+    }, [id])
+
+    useEffect(() => {
+        if (!isOneDocumentLoading && oneDocument) {
+            setTitle(oneDocument.title)
+            setContent(oneDocument.content)
+        }
+    }, [isOneDocumentLoading, oneDocument])
 
     return (
         <Container>
@@ -19,19 +41,30 @@ const Home: React.FunctionComponent = () => {
                             type="text"
                             onBlur={() => setShowTitleInput(false)}
                             autoFocus
-                            onChange={(change) => setValue({ ...value, title: change.target.value || 'Title' })}
-                            defaultValue={value.title}
+                            onChange={(change) => {
+                                console.log('change')
+                                setTitle(change.target.value || 'Title')
+                            }}
+                            value={title}
                             maxLength={22}
                         />
                     ) : (
-                        <h1 onClick={() => setShowTitleInput(true)}>{value.title}</h1>
+                        <h1 onClick={() => setShowTitleInput(true)}>{title}</h1>
                     )}
                 </div>
-                <button onClick={() => console.log(value.content)}>Save</button>
+                <button
+                    onClick={() => {
+                        if (id) {
+                            saveDocument.mutate({ id, title, content })
+                        }
+                    }}
+                >
+                    Save
+                </button>
             </Header>
             <Tools />
             <Main>
-                <ReactQuill value={value.content} onChange={(change) => setValue({ ...value, content: change })} />
+                <ReactQuill value={content} onChange={setContent} />
             </Main>
         </Container>
     )
@@ -40,7 +73,6 @@ const Home: React.FunctionComponent = () => {
 const Container = styled.div`
     padding: 20px 30px;
 `
-
 const Header = styled.header`
     display: flex;
     justify-content: space-between;
@@ -85,6 +117,10 @@ const Header = styled.header`
         box-sizing: border-box;
         border: 2px solid transparent;
         font-family: sans-serif;
+    }
+
+    h1:hover {
+        border: 2px solid black;
     }
 `
 
