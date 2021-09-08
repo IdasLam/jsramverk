@@ -1,45 +1,62 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 
-export const getAll = (shouldFetch: boolean) => {
-    const {
-        isLoading: isAllDocumentsLoading,
-        error: allDocumentsError,
-        data: allDocuments,
-    } = useQuery(
-        'document/all',
-        () =>
-            fetch('http://127.0.0.1:1337/document/all')
-                .then((res) => res.json())
-                .then(({ data }) => data),
-        {
-            enabled: shouldFetch,
-        },
-    )
-
-    return { isAllDocumentsLoading, allDocumentsError, allDocuments }
+type DocumentType = {
+    _id: string
+    title: string
+    content: string
 }
 
-export const getOne = (id: string) => {
-    const queryClient = useQueryClient()
+type GetAll = {
+    isAllDocumentsLoading: boolean
+    refetchAll: () => void
+    allDocumentsError: unknown
+    allDocuments: DocumentType[]
+}
+
+const ALL_DOCS = 'ALL_DOCS'
+
+export const getAll = (): GetAll => {
+    const {
+        isLoading: isAllDocumentsLoading,
+        refetch: refetchAll,
+        error: allDocumentsError,
+        data: allDocuments,
+    } = useQuery(ALL_DOCS, () =>
+        fetch('http://127.0.0.1:1337/document/all')
+            .then((res) => res.json())
+            .then(({ data }) => data),
+    )
+
+    return { isAllDocumentsLoading, refetchAll, allDocumentsError, allDocuments }
+}
+
+type GetOne = {
+    isOneDocumentLoading: boolean
+    oneDocumentError: unknown
+    oneDocument: DocumentType
+}
+
+export const getOne = (id: string | null): GetOne => {
     const {
         isLoading: isOneDocumentLoading,
         error: oneDocumentError,
         data: oneDocument,
-    } = useMutation(
-        'document/find',
+    } = useQuery(
+        [ALL_DOCS, id],
         () =>
             fetch('http://127.0.0.1:1337/document/find', {
                 method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
                 body: JSON.stringify({
-                    _id: id,
+                    id,
                 }),
             })
                 .then((res) => res.json())
                 .then(({ data }) => data),
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries('document/find')
-            },
+            enabled: !!id,
         },
     )
 
@@ -47,22 +64,21 @@ export const getOne = (id: string) => {
 }
 
 type Document = {
-    id: string
+    id?: string
     title: string
     content: string
 }
 
-export const save = ({ id, title, content }: Document) => {
+export const save = () => {
     const queryClient = useQueryClient()
-    const {
-        isLoading: isSaveDocumentLoading,
-        error: saveDocumentError,
-        data: saveDocument,
-    } = useMutation(
-        'document/save',
-        () =>
+    return useMutation(
+        ALL_DOCS,
+        ({ id, title, content }: Document) =>
             fetch('http://127.0.0.1:1337/document/save', {
                 method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
                 body: JSON.stringify({
                     _id: id,
                     title,
@@ -73,59 +89,46 @@ export const save = ({ id, title, content }: Document) => {
                 .then(({ data }) => data),
         {
             onSuccess: () => {
-                queryClient.invalidateQueries('document/save')
+                queryClient.invalidateQueries(ALL_DOCS)
             },
         },
     )
-
-    return { isSaveDocumentLoading, saveDocumentError, saveDocument }
 }
 
-export const newDocument = () => {
-    const queryClient = useQueryClient()
-    const {
-        isLoading: isNewDocumentLoading,
-        error: newDocumentError,
-        data: newDocument,
-    } = useMutation(
-        'document/new',
-        () =>
-            fetch('http://127.0.0.1:1337/document/new')
-                .then((res) => res.json())
-                .then(({ data }) => data),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries('document/new')
-            },
-        },
-    )
+// export const newDocument = () => {
+//     const queryClient = useQueryClient()
+//     return useMutation(
+//         ALL_DOCS,
+//         () =>
+//             fetch('http://127.0.0.1:1337/document/new')
+//                 .then((res) => res.json())
+//                 .then(({ data }) => data),
+//         {
+//             onSuccess: () => {
+//                 queryClient.invalidateQueries('document/new')
+//             },
+//         },
+//     )
+// }
 
-    return { isNewDocumentLoading, newDocumentError, newDocument }
-}
-
-export const deleteDocument = (id: string) => {
+export const deleteDocument = () => {
     const queryClient = useQueryClient()
-    const {
-        isLoading: isDeleteDocumentLoading,
-        error: deleteDocumentError,
-        data: deleteDocument,
-    } = useMutation(
-        'document/delete',
-        () =>
+    return useMutation(
+        ALL_DOCS,
+        (id: string) =>
             fetch('http://127.0.0.1:1337/document/delete', {
                 method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
                 body: JSON.stringify({
                     _id: id,
                 }),
-            })
-                .then((res) => res.json())
-                .then(({ data }) => data),
+            }),
         {
             onSuccess: () => {
-                queryClient.invalidateQueries('document/delete')
+                queryClient.invalidateQueries(ALL_DOCS)
             },
         },
     )
-
-    return { isDeleteDocumentLoading, deleteDocumentError, deleteDocument }
 }
