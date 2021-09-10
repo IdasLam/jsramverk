@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 
+// When on localhost use the local api otherwise use azure
+const url = window.location.hostname.includes('localhost')
+    ? 'http://127.0.0.1:1337'
+    : 'https://jsramverk-editor-idla18.azurewebsites.net'
+
 type DocumentType = {
     _id: string
     title: string
@@ -22,7 +27,7 @@ export const getAll = (): GetAll => {
         error: allDocumentsError,
         data: allDocuments,
     } = useQuery(ALL_DOCS, () =>
-        fetch('http://127.0.0.1:1337/document/all')
+        fetch(`${url}/document/all`)
             .then((res) => res.json())
             .then(({ data }) => data),
     )
@@ -44,7 +49,7 @@ export const getOne = (id: string | null): GetOne => {
     } = useQuery(
         [ALL_DOCS, id],
         () =>
-            fetch('http://127.0.0.1:1337/document/find', {
+            fetch(`${url}/document/find`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
@@ -74,7 +79,7 @@ export const save = () => {
     return useMutation(
         ALL_DOCS,
         ({ id, title, content }: Document) =>
-            fetch('http://127.0.0.1:1337/document/save', {
+            fetch(`${url}/document/save`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
@@ -116,7 +121,7 @@ export const deleteDocument = () => {
     return useMutation(
         ALL_DOCS,
         (id: string) =>
-            fetch('http://127.0.0.1:1337/document/delete', {
+            fetch(`${url}/document/delete`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
