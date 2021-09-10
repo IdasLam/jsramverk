@@ -39,11 +39,15 @@ const Home: React.FunctionComponent = () => {
                     {showTitleInput ? (
                         <input
                             type="text"
-                            onBlur={() => setShowTitleInput(false)}
+                            onBlur={() => {
+                                setShowTitleInput(false)
+                                if (title === '') {
+                                    setTitle('New title')
+                                }
+                            }}
                             autoFocus
                             onChange={(change) => {
-                                console.log('change')
-                                setTitle(change.target.value || 'Title')
+                                setTitle(change.target.value)
                             }}
                             value={title}
                             maxLength={22}
