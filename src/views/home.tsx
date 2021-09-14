@@ -6,6 +6,7 @@ import Tools from '../components/toolbar'
 import * as document from '../helpers/document'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+
 function useQuery() {
     return new URLSearchParams(useLocation().search)
 }
@@ -38,6 +39,7 @@ const Home: React.FunctionComponent = () => {
 
                     {showTitleInput ? (
                         <input
+                            data-testid="input"
                             type="text"
                             onBlur={() => {
                                 setShowTitleInput(false)
@@ -53,10 +55,18 @@ const Home: React.FunctionComponent = () => {
                             maxLength={22}
                         />
                     ) : (
-                        <h1 onClick={() => setShowTitleInput(true)}>{title}</h1>
+                        <h1
+                            data-testid="title"
+                            onClick={() => {
+                                setShowTitleInput(true)
+                            }}
+                        >
+                            {title}
+                        </h1>
                     )}
                 </div>
                 <button
+                    data-testid="saveButton"
                     onClick={() => {
                         if (id) {
                             saveDocument.mutate({ id, title, content })
