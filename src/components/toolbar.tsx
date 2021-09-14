@@ -49,8 +49,11 @@ const Tools: FunctionComponent = () => {
                         : null}
                 </select>
             </div>
-            <ButtonDelete onClick={() => setDisplayDeletePromt(true)}>Delete</ButtonDelete>
+            <ButtonDelete data-testid="deleteButton" onClick={() => setDisplayDeletePromt(true)}>
+                Delete
+            </ButtonDelete>
             <ButtonAccept
+                data-testid="newDoc"
                 onClick={() => {
                     newDoc.mutateAsync({ title: 'New title', content: '' }).then((data) => {
                         historyR.push('?id=' + data._id)
@@ -60,7 +63,7 @@ const Tools: FunctionComponent = () => {
                 New File
             </ButtonAccept>
             {displayDeletePromt ? (
-                <section>
+                <section data-testid="popup">
                     <Popup>
                         <div>
                             <h2>Are you sure that you want to delete this file?</h2>
@@ -79,7 +82,9 @@ const Tools: FunctionComponent = () => {
                                 >
                                     Yes
                                 </ButtonDelete>
-                                <ButtonAccept onClick={() => setDisplayDeletePromt(false)}>No</ButtonAccept>
+                                <ButtonAccept data-testid="close" onClick={() => setDisplayDeletePromt(false)}>
+                                    No
+                                </ButtonAccept>
                             </div>
                         </div>
                     </Popup>
