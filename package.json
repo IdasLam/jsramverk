@@ -32,6 +32,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "coverage": "npm test -- --coverage",
     "eject": "react-scripts eject",
     "deploy": "npm run build && rsync -av --delete build/ idla18@ssh.student.bth.se:www/editor"
   },
