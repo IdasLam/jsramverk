@@ -1,6 +1,8 @@
-# Getting Started with Create React App
+[![Build Status](https://app.travis-ci.com/IdasLam/jsramverk.svg?branch=master)](https://app.travis-ci.com/IdasLam/jsramverk)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# JsRamverk client
+
+This client is used in course DV1612 H21 lp1 at BTH.
 
 ## Available Scripts
 
