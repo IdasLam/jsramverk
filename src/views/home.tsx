@@ -6,6 +6,8 @@ import Tools from '../components/toolbar'
 import * as document from '../helpers/document'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import useSocket from '../hooks/useSocket'
+import socket from '../sockets'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -16,20 +18,21 @@ const Home: React.FunctionComponent = () => {
     const [title, setTitle] = useState('New title')
     const [content, setContent] = useState('')
     const [showTitleInput, setShowTitleInput] = useState(false)
-    const { isOneDocumentLoading, oneDocument } = document.getOne(id)
+    const doc = useSocket('doc')
     const saveDocument = document.save()
 
     useEffect(() => {
         setTitle('New Title')
         setContent('')
+        socket.emit('create', id)
     }, [id])
 
     useEffect(() => {
-        if (!isOneDocumentLoading && oneDocument) {
-            setTitle(oneDocument.title)
-            setContent(oneDocument.content)
-        }
-    }, [isOneDocumentLoading, oneDocument])
+        if (!doc) return
+
+        setTitle(doc.title)
+        setContent(doc.content)
+    }, [doc])
 
     return (
         <Container>
@@ -50,6 +53,7 @@ const Home: React.FunctionComponent = () => {
                             autoFocus
                             onChange={(change) => {
                                 setTitle(change.target.value)
+                                socket.emit('updatedDoc', { _id: id, title: change.target.value, content })
                             }}
                             value={title}
                             maxLength={22}
@@ -78,7 +82,13 @@ const Home: React.FunctionComponent = () => {
             </Header>
             <Tools />
             <Main>
-                <ReactQuill value={content} onChange={setContent} />
+                <ReactQuill
+                    value={content}
+                    onChange={(value) => {
+                        setContent(value)
+                        socket.emit('updatedDoc', { _id: id, title, content: value })
+                    }}
+                />
             </Main>
         </Container>
     )
