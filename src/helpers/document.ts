@@ -27,7 +27,11 @@ export const getAll = (): GetAll => {
         error: allDocumentsError,
         data: allDocuments,
     } = useQuery(ALL_DOCS, () =>
-        fetch(`${url}/document/all`)
+        fetch(`${url}/document/all`, {
+            headers: {
+                'x-access-token': localStorage.getItem('token') ?? '',
+            },
+        })
             .then((res) => res.json())
             .then(({ data }) => data),
     )
@@ -53,6 +57,7 @@ export const getOne = (id: string | null): GetOne => {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
+                    'x-access-token': localStorage.getItem('token') ?? '',
                 },
                 body: JSON.stringify({
                     id,
@@ -83,6 +88,7 @@ export const save = () => {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
+                    'x-access-token': localStorage.getItem('token') ?? '',
                 },
                 body: JSON.stringify({
                     _id: id,
@@ -125,6 +131,7 @@ export const deleteDocument = () => {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
+                    'x-access-token': localStorage.getItem('token') ?? '',
                 },
                 body: JSON.stringify({
                     _id: id,
