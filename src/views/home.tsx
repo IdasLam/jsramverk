@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import useSocket from '../hooks/useSocket'
 import socket from '../sockets'
+import { useHistory } from 'react-router-dom'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -20,11 +21,15 @@ const Home: React.FunctionComponent = () => {
     const [showTitleInput, setShowTitleInput] = useState(false)
     const doc = useSocket('doc')
     const saveDocument = document.save()
+    const history = useHistory()
 
     useEffect(() => {
         setTitle('New Title')
         setContent('')
-        socket.emit('create', id)
+    }, [])
+
+    useEffect(() => {
+        socket.emit('create', { id })
     }, [id])
 
     useEffect(() => {
@@ -89,10 +94,37 @@ const Home: React.FunctionComponent = () => {
                         socket.emit('updatedDoc', { _id: id, title, content: value })
                     }}
                 />
+                <Button
+                    onClick={() => {
+                        localStorage.removeItem('token')
+                        history.push('/')
+                        socket.emit('close')
+                    }}
+                >
+                    Logout
+                </Button>
             </Main>
         </Container>
     )
 }
+
+const Button = styled.button`
+    position: absolute;
+    bottom: 5%;
+    right: 5%;
+    background-color: #ffffff94;
+    border: 1px solid whitesmoke;
+    border-radius: 4px;
+    padding: 10px 20px;
+    height: fit-content;
+    align-self: center;
+    transition: ease-in-out 0.2s;
+    cursor: pointer;
+
+    :hover {
+        background-color: #fffffff2;
+    }
+`
 
 const Container = styled.div`
     padding: 20px 30px;
