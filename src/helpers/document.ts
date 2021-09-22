@@ -21,19 +21,26 @@ type GetAll = {
 const ALL_DOCS = 'ALL_DOCS'
 
 export const getAll = (): GetAll => {
+    const token = localStorage.getItem('token')
     const {
         isLoading: isAllDocumentsLoading,
         refetch: refetchAll,
         error: allDocumentsError,
         data: allDocuments,
-    } = useQuery(ALL_DOCS, () =>
-        fetch(`${url}/document/all`, {
-            headers: {
-                'x-access-token': localStorage.getItem('token') ?? '',
-            },
-        })
-            .then((res) => res.json())
-            .then(({ data }) => data),
+    } = useQuery(
+        ALL_DOCS,
+        () => {
+            return fetch(`${url}/document/all`, {
+                headers: {
+                    'x-access-token': localStorage.getItem('token') ?? '',
+                },
+            })
+                .then((res) => res.json())
+                .then(({ data }) => data)
+        },
+        {
+            enabled: token !== null,
+        },
     )
 
     return { isAllDocumentsLoading, refetchAll, allDocumentsError, allDocuments }
@@ -52,8 +59,8 @@ export const getOne = (id: string | null): GetOne => {
         data: oneDocument,
     } = useQuery(
         [ALL_DOCS, id],
-        () =>
-            fetch(`${url}/document/find`, {
+        () => {
+            return fetch(`${url}/document/find`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
@@ -64,7 +71,8 @@ export const getOne = (id: string | null): GetOne => {
                 }),
             })
                 .then((res) => res.json())
-                .then(({ data }) => data),
+                .then(({ data }) => data)
+        },
         {
             enabled: !!id,
         },
