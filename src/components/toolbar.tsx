@@ -5,19 +5,31 @@ import styled from 'styled-components'
 import * as document from '../helpers/document'
 import { useHistory, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import Shared from './shared'
+import { useJwt } from 'react-jwt'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
 }
 
-const Tools: FunctionComponent = () => {
+type ToolsProps = {
+    doc: {
+        _id: string
+        title: string
+        content: string
+        access: string
+    } | null
+}
+
+const Tools: FunctionComponent<ToolsProps> = (props) => {
     const id = useQuery().get('id')
     const del = document.deleteDocument()
     const newDoc = document.save()
-    const { isAllDocumentsLoading, refetchAll, allDocumentsError, allDocuments } = document.getAll()
+    const { isAllDocumentsLoading, refetchAll, allDocuments } = document.getAll()
     const [displayDeletePromt, setDisplayDeletePromt] = useState(false)
-    const historyR = useHistory()
+    const history = useHistory()
     const [selectedValue, setSelectedValue] = useState(id ?? 'all')
+    const [displayShared, setDisplayShared] = useState(false)
 
     useEffect(() => {
         if (id) {
@@ -33,7 +45,7 @@ const Tools: FunctionComponent = () => {
                     onChange={(event) => {
                         setSelectedValue(event.target.value)
                         if (event.target.value !== 'all') {
-                            historyR.push('?id=' + event.target.value)
+                            history.push('?id=' + event.target.value)
                         }
                     }}
                 >
@@ -56,13 +68,14 @@ const Tools: FunctionComponent = () => {
                 data-testid="newDoc"
                 onClick={() => {
                     newDoc.mutateAsync({ title: 'New title', content: '' }).then((data) => {
-                        historyR.push('?id=' + data._id)
+                        history.push('?id=' + data._id)
                     })
                 }}
             >
                 New File
             </ButtonAccept>
-            {displayDeletePromt ? (
+            <Button onClick={() => setDisplayShared(true)}>Share</Button>
+            {displayDeletePromt && (
                 <section data-testid="popup">
                     <Popup>
                         <div>
@@ -72,10 +85,10 @@ const Tools: FunctionComponent = () => {
                                     onClick={() => {
                                         if (id) {
                                             // delete
+                                            history.push('/doc')
                                             del.mutateAsync(id).then(() => {
                                                 refetchAll()
                                                 setDisplayDeletePromt(false)
-                                                historyR.push('/')
                                             })
                                         }
                                     }}
@@ -89,7 +102,8 @@ const Tools: FunctionComponent = () => {
                         </div>
                     </Popup>
                 </section>
-            ) : null}
+            )}
+            {displayShared && <Shared doc={props.doc} />}
         </ToolBar>
     )
 }
@@ -118,6 +132,20 @@ const Popup = styled.div`
                 width: 50px;
             }
         }
+    }
+`
+const Button = styled.button`
+    background-color: #ffffff94;
+    border: 1px solid whitesmoke;
+    border-radius: 4px;
+    padding: 10px 20px;
+    height: fit-content;
+    align-self: center;
+    transition: ease-in-out 0.2s;
+    cursor: pointer;
+
+    :hover {
+        background-color: #fffffff2;
     }
 `
 
