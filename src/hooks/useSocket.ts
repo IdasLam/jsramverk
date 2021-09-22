@@ -5,6 +5,7 @@ type Doc = {
     _id: string
     title: string
     content: string
+    access: string
 }
 
 const useSocket = (name: string) => {
