@@ -47,6 +47,7 @@ const Login = () => {
                                 localStorage.setItem('token', data.token)
                                 history.push('/doc')
                             })
+                            localStorage.setItem('username', data.username)
                         }}
                     >
                         Register & Login
@@ -77,6 +78,7 @@ const Login = () => {
                                 localStorage.setItem('token', incommingData.token)
                                 history.push('/doc')
                             })
+                            localStorage.setItem('username', data.username)
                         }}
                     >
                         Login
