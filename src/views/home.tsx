@@ -29,7 +29,7 @@ const Home: React.FunctionComponent = () => {
     }, [])
 
     useEffect(() => {
-        socket.emit('create', { id })
+        socket.emit('create', { id, username: localStorage.getItem('username') })
     }, [id])
 
     useEffect(() => {
@@ -85,7 +85,7 @@ const Home: React.FunctionComponent = () => {
                     Save
                 </button>
             </Header>
-            <Tools />
+            <Tools doc={doc} />
             <Main>
                 <ReactQuill
                     value={content}
@@ -94,16 +94,17 @@ const Home: React.FunctionComponent = () => {
                         socket.emit('updatedDoc', { _id: id, title, content: value })
                     }}
                 />
-                <Button
-                    onClick={() => {
-                        localStorage.removeItem('token')
-                        history.push('/')
-                        socket.emit('close')
-                    }}
-                >
-                    Logout
-                </Button>
             </Main>
+            <Button
+                onClick={() => {
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('username')
+                    socket.emit('close')
+                    history.push('/')
+                }}
+            >
+                Logout
+            </Button>
         </Container>
     )
 }
