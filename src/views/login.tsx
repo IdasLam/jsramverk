@@ -30,7 +30,7 @@ const Login = () => {
                         id="outlined-basic"
                         label="Username"
                         variant="outlined"
-                        onChange={(event) => setData({ ...data, username: event.target.value })}
+                        onChange={(event) => setData({ ...data, username: event.target.value.replace(/\s+/g, '') })}
                     />
                     <TextField
                         id="outlined-basic"
@@ -44,10 +44,8 @@ const Login = () => {
                         variant="outlined"
                         onClick={() => {
                             signup.mutateAsync(data).then((data) => {
-                                localStorage.setItem('token', data.token)
                                 history.push('/doc')
                             })
-                            localStorage.setItem('username', data.username)
                         }}
                     >
                         Register & Login
@@ -61,7 +59,7 @@ const Login = () => {
                         id="outlined-basic"
                         label="Username"
                         variant="outlined"
-                        onChange={(event) => setData({ ...data, username: event.target.value })}
+                        onChange={(event) => setData({ ...data, username: event.target.value.replace(/\s+/g, '') })}
                     />
                     <TextField
                         id="outlined-basic"
@@ -75,10 +73,8 @@ const Login = () => {
                         variant="outlined"
                         onClick={() => {
                             login.mutateAsync(data).then((incommingData) => {
-                                localStorage.setItem('token', incommingData.token)
                                 history.push('/doc')
                             })
-                            localStorage.setItem('username', data.username)
                         }}
                     >
                         Login
