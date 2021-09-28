@@ -7,6 +7,7 @@ import { useHistory, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Shared from './shared'
 import { useJwt } from 'react-jwt'
+import socket from '../sockets'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -17,7 +18,7 @@ type ToolsProps = {
         _id: string
         title: string
         content: string
-        access: string
+        access: string[]
     } | null
 }
 
@@ -25,10 +26,10 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
     const id = useQuery().get('id')
     const del = document.deleteDocument()
     const newDoc = document.save()
-    const { isAllDocumentsLoading, refetchAll, allDocuments } = document.getAll()
+    const { isAllDocumentsLoading, refetchAll, allDocuments, allDocumentsError } = document.getAll()
     const [displayDeletePromt, setDisplayDeletePromt] = useState(false)
     const history = useHistory()
-    const [selectedValue, setSelectedValue] = useState(id ?? 'all')
+    const [selectedValue, setSelectedValue] = useState(id ?? undefined)
     const [displayShared, setDisplayShared] = useState(false)
 
     useEffect(() => {
@@ -36,6 +37,18 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             setSelectedValue(id)
         }
     }, [id])
+
+    useEffect(() => {
+        if (id && !isAllDocumentsLoading && Array.isArray(allDocuments)) {
+            const found = allDocuments.filter((document) => document._id === id)
+            if (found.length === 0) {
+                history.push('/doc')
+                return
+            }
+
+            setSelectedValue(id)
+        }
+    }, [allDocuments])
 
     return (
         <ToolBar>
@@ -47,10 +60,19 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                         if (event.target.value !== 'all') {
                             history.push('?id=' + event.target.value)
                         }
+
+                        if (id) {
+                            console.log(id, event.target.value, 'ids')
+                            socket.emit('leave', id)
+                            socket.emit('create', { id: event.target.value })
+                        }
                     }}
+                    defaultValue="all"
                 >
-                    <option value="all">All files</option>
-                    {!isAllDocumentsLoading && allDocuments
+                    <option value="all" disabled>
+                        All Documents
+                    </option>
+                    {!isAllDocumentsLoading && Array.isArray(allDocuments)
                         ? allDocuments.map((doc) => {
                               return (
                                   <option key={doc._id} value={doc._id}>
@@ -61,9 +83,14 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                         : null}
                 </select>
             </div>
-            <ButtonDelete data-testid="deleteButton" onClick={() => setDisplayDeletePromt(true)}>
-                Delete
-            </ButtonDelete>
+            {id && (
+                <>
+                    <ButtonDelete data-testid="deleteButton" onClick={() => setDisplayDeletePromt(true)}>
+                        Delete
+                    </ButtonDelete>
+                    <Button onClick={() => setDisplayShared(true)}>Share</Button>
+                </>
+            )}
             <ButtonAccept
                 data-testid="newDoc"
                 onClick={() => {
@@ -74,7 +101,6 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             >
                 New File
             </ButtonAccept>
-            <Button onClick={() => setDisplayShared(true)}>Share</Button>
             {displayDeletePromt && (
                 <section data-testid="popup">
                     <Popup>
@@ -103,20 +129,25 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                     </Popup>
                 </section>
             )}
-            {displayShared && <Shared doc={props.doc} />}
+            {displayShared && (
+                <>
+                    <section onClick={() => setDisplayShared(false)}></section>
+                    <Shared doc={props.doc} onClose={() => setDisplayShared(false)} />
+                </>
+            )}
         </ToolBar>
     )
 }
 
 const Popup = styled.div`
     position: absolute;
+    z-index: 200;
     top: 30%;
     left: 50%;
     transform: translate(-50%, -50%);
     background-image: linear-gradient(to bottom right, #c9ffda, #ea92e3);
     background-repeat: no-repeat;
     padding: 10px;
-    z-index: 2000;
 
     > div {
         background-color: white;
@@ -155,6 +186,7 @@ const ButtonDelete = styled.button`
     height: 40px;
     cursor: pointer;
     transition: ease-in-out 0.2s;
+    border-radius: 4px;
 
     :hover {
         background-color: #fa5c5c93;
@@ -167,6 +199,7 @@ const ButtonAccept = styled.button`
     height: 40px;
     cursor: pointer;
     transition: ease-in-out 0.2s;
+    border-radius: 4px;
 
     :hover {
         background-color: #61fa5c92;
@@ -188,6 +221,7 @@ const ToolBar = styled.div`
         background-color: #ffffff94;
         border: 1px solid whitesmoke;
         transition: ease-in-out 0.2s;
+        border-radius: 4px;
     }
 
     select:hover {
@@ -201,6 +235,8 @@ const ToolBar = styled.div`
         position: absolute;
         top: 0;
         left: 0;
+        z-index: 200;
+        cursor: grab;
     }
 `
 
