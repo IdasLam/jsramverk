@@ -1,29 +1,25 @@
 import './App.css'
 import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from 'react-query'
-import { useJwt } from 'react-jwt'
 
 import Home from './views/home'
 import Login from './views/login'
+import { isLoggedIn } from './helpers/login'
 
-const queryClient = new QueryClient()
 function App() {
-    const { isExpired } = useJwt(localStorage.getItem('token') ?? '')
+    const loggedIn = isLoggedIn()
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <Router>
-                {isExpired && <Redirect to="/" />}
-                <Switch>
-                    <Route exact path="/">
-                        <Login />
-                    </Route>
-                    <Route exact path="/doc">
-                        <Home />
-                    </Route>
-                </Switch>
-            </Router>
-        </QueryClientProvider>
+        <Router>
+            {!loggedIn?.data?.authorized && !loggedIn.isLoading && <Redirect to="/" />}
+            <Switch>
+                <Route exact path="/">
+                    <Login />
+                </Route>
+                <Route exact path="/doc">
+                    <Home />
+                </Route>
+            </Switch>
+        </Router>
     )
 }
 
