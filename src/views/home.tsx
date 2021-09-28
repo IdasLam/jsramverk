@@ -29,7 +29,9 @@ const Home: React.FunctionComponent = () => {
     }, [])
 
     useEffect(() => {
-        socket.emit('create', { id, username: localStorage.getItem('username') })
+        if (id === undefined) {
+            history.push('/doc')
+        }
     }, [id])
 
     useEffect(() => {
@@ -58,13 +60,19 @@ const Home: React.FunctionComponent = () => {
                             autoFocus
                             onChange={(change) => {
                                 setTitle(change.target.value)
-                                socket.emit('updatedDoc', { _id: id, title: change.target.value, content })
+                                socket.emit('updatedDoc', {
+                                    _id: id,
+                                    access: doc?.access,
+                                    title: change.target.value,
+                                    content,
+                                })
                             }}
                             value={title}
                             maxLength={22}
                         />
-                    ) : (
+                    ) : id ? (
                         <h1
+                            className="editable"
                             data-testid="title"
                             onClick={() => {
                                 setShowTitleInput(true)
@@ -72,33 +80,44 @@ const Home: React.FunctionComponent = () => {
                         >
                             {title}
                         </h1>
+                    ) : (
+                        <h1>JsRamverk</h1>
                     )}
                 </div>
-                <button
-                    data-testid="saveButton"
-                    onClick={() => {
-                        if (id) {
-                            saveDocument.mutate({ id, title, content })
-                        }
-                    }}
-                >
-                    Save
-                </button>
+                {id && (
+                    <button
+                        data-testid="saveButton"
+                        onClick={() => {
+                            if (id) {
+                                saveDocument.mutate({ id, title, content })
+                            }
+                        }}
+                    >
+                        Save
+                    </button>
+                )}
             </Header>
             <Tools doc={doc} />
             <Main>
-                <ReactQuill
-                    value={content}
-                    onChange={(value) => {
-                        setContent(value)
-                        socket.emit('updatedDoc', { _id: id, title, content: value })
-                    }}
-                />
+                {id ? (
+                    <ReactQuill
+                        value={content}
+                        onChange={(value) => {
+                            setContent(value)
+                            socket.emit('updatedDoc', {
+                                _id: id,
+                                access: doc?.access,
+                                title,
+                                content: value,
+                            })
+                        }}
+                    />
+                ) : (
+                    <h2>Please choose a document</h2>
+                )}
             </Main>
             <Button
                 onClick={() => {
-                    localStorage.removeItem('token')
-                    localStorage.removeItem('username')
                     socket.emit('close')
                     history.push('/')
                 }}
@@ -170,13 +189,13 @@ const Header = styled.header`
         font-family: sans-serif;
     }
 
-    h1 {
+    .editable {
         box-sizing: border-box;
         border: 2px solid transparent;
         font-family: sans-serif;
     }
 
-    h1:hover {
+    .editable:hover {
         border: 2px solid black;
     }
 `
