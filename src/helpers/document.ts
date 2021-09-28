@@ -21,27 +21,18 @@ type GetAll = {
 const ALL_DOCS = 'ALL_DOCS'
 
 export const getAll = (): GetAll => {
-    const token = localStorage.getItem('token')
     const {
         isLoading: isAllDocumentsLoading,
         refetch: refetchAll,
         error: allDocumentsError,
         data: allDocuments,
-    } = useQuery(
-        ALL_DOCS,
-        () => {
-            return fetch(`${url}/document/all`, {
-                headers: {
-                    'x-access-token': localStorage.getItem('token') ?? '',
-                },
-            })
-                .then((res) => res.json())
-                .then(({ data }) => data)
-        },
-        {
-            enabled: token !== null,
-        },
-    )
+    } = useQuery(ALL_DOCS, () => {
+        return fetch(`${url}/document/all`, {
+            credentials: 'include',
+        })
+            .then((res) => res.json())
+            .then(({ data }) => data)
+    })
 
     return { isAllDocumentsLoading, refetchAll, allDocumentsError, allDocuments }
 }
@@ -64,8 +55,8 @@ export const getOne = (id: string | null): GetOne => {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
-                    'x-access-token': localStorage.getItem('token') ?? '',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     id,
                 }),
@@ -91,13 +82,13 @@ export const save = () => {
     const queryClient = useQueryClient()
     return useMutation(
         ALL_DOCS,
-        ({ id, title, content }: Document) =>
-            fetch(`${url}/document/save`, {
+        ({ id, title, content }: Document) => {
+            return fetch(`${url}/document/save`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
-                    'x-access-token': localStorage.getItem('token') ?? '',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     _id: id,
                     title,
@@ -105,7 +96,8 @@ export const save = () => {
                 }),
             })
                 .then((res) => res.json())
-                .then(({ data }) => data),
+                .then(({ data }) => data)
+        },
         {
             onSuccess: () => {
                 queryClient.invalidateQueries(ALL_DOCS)
@@ -139,8 +131,8 @@ export const deleteDocument = () => {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
-                    'x-access-token': localStorage.getItem('token') ?? '',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     _id: id,
                 }),
