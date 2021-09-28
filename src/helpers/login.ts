@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 
 // When on localhost use the local api otherwise use azure
 const url = window.location.hostname.includes('localhost')
@@ -22,6 +22,7 @@ export const login = () => {
                 headers: {
                     'content-type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     password,
                     username,
@@ -39,6 +40,7 @@ export const login = () => {
 
 export const signup = () => {
     const queryClient = useQueryClient()
+
     return useMutation(
         LOGIN,
         ({ password, username }: credentials) =>
@@ -47,6 +49,7 @@ export const signup = () => {
                 headers: {
                     'content-type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     password,
                     username,
@@ -60,4 +63,8 @@ export const signup = () => {
             },
         },
     )
+}
+
+export const isLoggedIn = () => {
+    return useQuery('loggedin', () => fetch(`${url}/status`, { credentials: 'include' }).then((res) => res.json()))
 }
