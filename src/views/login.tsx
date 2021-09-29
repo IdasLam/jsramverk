@@ -44,7 +44,9 @@ const Login = () => {
                         variant="outlined"
                         onClick={() => {
                             signup.mutateAsync(data).then((data) => {
-                                history.push('/doc')
+                                if (data) {
+                                    history.push('/doc')
+                                }
                             })
                         }}
                     >
@@ -73,7 +75,9 @@ const Login = () => {
                         variant="outlined"
                         onClick={() => {
                             login.mutateAsync(data).then((incommingData) => {
-                                history.push('/doc')
+                                if (incommingData) {
+                                    history.push('/doc')
+                                }
                             })
                         }}
                     >
