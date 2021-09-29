@@ -6,8 +6,8 @@ import * as document from '../helpers/document'
 import { useHistory, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Shared from './shared'
-import { useJwt } from 'react-jwt'
 import socket from '../sockets'
+import useSocket from '../hooks/useSocket'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -20,17 +20,23 @@ type ToolsProps = {
         content: string
         access: string[]
     } | null
+    title: string
 }
 
 const Tools: FunctionComponent<ToolsProps> = (props) => {
     const id = useQuery().get('id')
     const del = document.deleteDocument()
     const newDoc = document.save()
-    const { isAllDocumentsLoading, refetchAll, allDocuments, allDocumentsError } = document.getAll()
     const [displayDeletePromt, setDisplayDeletePromt] = useState(false)
     const history = useHistory()
-    const [selectedValue, setSelectedValue] = useState(id ?? undefined)
+    const allDocuments = useSocket('allDocs')
+
+    const [selectedValue, setSelectedValue] = useState(id ?? 'all')
     const [displayShared, setDisplayShared] = useState(false)
+
+    useEffect(() => {
+        socket.emit('login')
+    }, [])
 
     useEffect(() => {
         if (id) {
@@ -39,7 +45,7 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
     }, [id])
 
     useEffect(() => {
-        if (id && !isAllDocumentsLoading && Array.isArray(allDocuments)) {
+        if (id && Array.isArray(allDocuments)) {
             const found = allDocuments.filter((document) => document._id === id)
             if (found.length === 0) {
                 history.push('/doc')
@@ -62,21 +68,20 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                         }
 
                         if (id) {
-                            console.log(id, event.target.value, 'ids')
                             socket.emit('leave', id)
-                            socket.emit('create', { id: event.target.value })
                         }
+
+                        socket.emit('create', event.target.value)
                     }}
-                    defaultValue="all"
                 >
                     <option value="all" disabled>
                         All Documents
                     </option>
-                    {!isAllDocumentsLoading && Array.isArray(allDocuments)
+                    {Array.isArray(allDocuments)
                         ? allDocuments.map((doc) => {
                               return (
                                   <option key={doc._id} value={doc._id}>
-                                      {doc.title}
+                                      {doc._id === id ? props.title : doc.title}
                                   </option>
                               )
                           })
@@ -96,6 +101,7 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                 onClick={() => {
                     newDoc.mutateAsync({ title: 'New title', content: '' }).then((data) => {
                         history.push('?id=' + data._id)
+                        socket.emit('create', data._id)
                     })
                 }}
             >
@@ -113,8 +119,9 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                                             // delete
                                             history.push('/doc')
                                             del.mutateAsync(id).then(() => {
-                                                refetchAll()
                                                 setDisplayDeletePromt(false)
+                                                socket.emit('refreshDocs')
+                                                setSelectedValue('all')
                                             })
                                         }
                                     }}
