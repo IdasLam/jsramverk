@@ -68,3 +68,7 @@ export const signup = () => {
 export const isLoggedIn = () => {
     return useQuery('loggedin', () => fetch(`${url}/status`, { credentials: 'include' }).then((res) => res.json()))
 }
+
+export const logout = async () => {
+    return await fetch(`${url}/logout`, { method: 'GET', credentials: 'include' }).then((res) => res.json())
+}
