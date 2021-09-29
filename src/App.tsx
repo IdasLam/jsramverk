@@ -8,9 +8,11 @@ import { isLoggedIn } from './helpers/login'
 function App() {
     const loggedIn = isLoggedIn()
 
+    const loggedin = !loggedIn?.data?.authorized && !loggedIn.isLoading
+
     return (
         <Router>
-            {!loggedIn?.data?.authorized && !loggedIn.isLoading && <Redirect to="/" />}
+            {loggedin && <Redirect to="/" />}
             <Switch>
                 <Route exact path="/">
                     <Login />
