@@ -9,6 +9,7 @@ import { useLocation } from 'react-router-dom'
 import useSocket from '../hooks/useSocket'
 import socket from '../sockets'
 import { useHistory } from 'react-router-dom'
+import { logout } from '../helpers/login'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -24,13 +25,13 @@ const Home: React.FunctionComponent = () => {
     const history = useHistory()
 
     useEffect(() => {
-        setTitle('New Title')
-        setContent('')
+        socket.disconnected && socket.connect()
     }, [])
 
     useEffect(() => {
         if (id === undefined) {
             history.push('/doc')
+            return
         }
     }, [id])
 
@@ -97,7 +98,7 @@ const Home: React.FunctionComponent = () => {
                     </button>
                 )}
             </Header>
-            <Tools doc={doc} />
+            <Tools doc={doc} title={title} />
             <Main>
                 {id ? (
                     <ReactQuill
@@ -117,9 +118,13 @@ const Home: React.FunctionComponent = () => {
                 )}
             </Main>
             <Button
-                onClick={() => {
+                onClick={async () => {
                     socket.emit('close')
-                    history.push('/')
+                    const out = await logout()
+
+                    if (out.info) {
+                        history.push('/')
+                    }
                 }}
             >
                 Logout
