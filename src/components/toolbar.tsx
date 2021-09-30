@@ -7,29 +7,24 @@ import { useHistory, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Shared from './shared'
 import socket from '../sockets'
-import useSocket from '../hooks/useSocket'
+import { Doc } from '../hooks/useSocket'
+import { root } from '../helpers/root'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
 }
 
 type ToolsProps = {
-    doc: {
-        _id: string
-        title: string
-        content: string
-        access: string[]
-    } | null
-    title: string
+    allDocs: Doc[] | null
+    doc: Doc | null
 }
 
 const Tools: FunctionComponent<ToolsProps> = (props) => {
+    const { allDocs, doc: currentDoc } = props
     const id = useQuery().get('id')
-    const del = document.deleteDocument()
     const newDoc = document.save()
     const [displayDeletePromt, setDisplayDeletePromt] = useState(false)
     const history = useHistory()
-    const allDocuments = useSocket('allDocs')
 
     const [selectedValue, setSelectedValue] = useState(id ?? 'all')
     const [displayShared, setDisplayShared] = useState(false)
@@ -45,16 +40,16 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
     }, [id])
 
     useEffect(() => {
-        if (id && Array.isArray(allDocuments)) {
-            const found = allDocuments.filter((document) => document._id === id)
+        if (id && Array.isArray(allDocs)) {
+            const found = allDocs.filter((document) => document._id === id)
             if (found.length === 0) {
-                history.push('/doc')
+                history.push(`${root}doc`)
                 return
             }
 
             setSelectedValue(id)
         }
-    }, [allDocuments])
+    }, [allDocs])
 
     return (
         <ToolBar>
@@ -77,11 +72,11 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                     <option value="all" disabled>
                         All Documents
                     </option>
-                    {Array.isArray(allDocuments)
-                        ? allDocuments.map((doc) => {
+                    {Array.isArray(allDocs)
+                        ? allDocs.map((doc) => {
                               return (
                                   <option key={doc._id} value={doc._id}>
-                                      {doc._id === id ? props.title : doc.title}
+                                      {doc.title}
                                   </option>
                               )
                           })
@@ -117,10 +112,11 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                                     onClick={() => {
                                         if (id) {
                                             // delete
-                                            history.push('/doc')
-                                            del.mutateAsync(id).then(() => {
+                                            history.push(`${root}doc`)
+
+                                            socket.emit('delete', id, () => {
                                                 setDisplayDeletePromt(false)
-                                                socket.emit('refreshDocs')
+
                                                 setSelectedValue('all')
                                             })
                                         }
@@ -139,7 +135,7 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             {displayShared && (
                 <>
                     <section onClick={() => setDisplayShared(false)}></section>
-                    <Shared doc={props.doc} onClose={() => setDisplayShared(false)} />
+                    <Shared doc={currentDoc} onClose={() => setDisplayShared(false)} />
                 </>
             )}
         </ToolBar>
