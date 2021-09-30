@@ -4,6 +4,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import * as loginHelper from '../helpers/login'
 import { useHistory } from 'react-router'
+import { root } from '../helpers/root'
 
 const Login = () => {
     const [registerBox, setRegisterBox] = useState(false)
@@ -45,7 +46,7 @@ const Login = () => {
                         onClick={() => {
                             signup.mutateAsync(data).then((data) => {
                                 if (data) {
-                                    history.push('/doc')
+                                    history.push(`${root}doc`)
                                 }
                             })
                         }}
@@ -76,7 +77,7 @@ const Login = () => {
                         onClick={() => {
                             login.mutateAsync(data).then((incommingData) => {
                                 if (incommingData) {
-                                    history.push('/doc')
+                                    history.push(`${root}doc`)
                                 }
                             })
                         }}
