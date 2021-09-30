@@ -6,10 +6,11 @@ import Tools from '../components/toolbar'
 import * as document from '../helpers/document'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import useSocket from '../hooks/useSocket'
+import useSocket, { Doc } from '../hooks/useSocket'
 import socket from '../sockets'
 import { useHistory } from 'react-router-dom'
 import { logout } from '../helpers/login'
+import { root } from '../helpers/root'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -18,19 +19,30 @@ function useQuery() {
 const Home: React.FunctionComponent = () => {
     const id = useQuery().get('id')
     const [title, setTitle] = useState('New title')
-    const [content, setContent] = useState('')
+    const [content, setContent] = useState<string | undefined>(undefined)
     const [showTitleInput, setShowTitleInput] = useState(false)
-    const doc = useSocket('doc')
+    const [allDocs, setAllDocs] = useSocket<Doc[]>('allDocs')
     const saveDocument = document.save()
     const history = useHistory()
+    const [doc, setDoc] = useState<Doc | null>(null)
+
+    useEffect(() => {
+        if (allDocs === null) return
+
+        setDoc(allDocs.find((d) => d._id === id) || null)
+    }, [allDocs])
 
     useEffect(() => {
         socket.disconnected && socket.connect()
     }, [])
 
     useEffect(() => {
-        if (id === undefined) {
-            history.push('/doc')
+        id && socket.emit('getDoc', id)
+
+        if (!id) {
+            setContent('')
+            setTitle('New title')
+            history.push(`${root}doc`)
             return
         }
     }, [id])
@@ -67,6 +79,18 @@ const Home: React.FunctionComponent = () => {
                                     title: change.target.value,
                                     content,
                                 })
+
+                                if (allDocs !== null) {
+                                    setAllDocs(
+                                        allDocs.map((d) => {
+                                            if (d._id === id) {
+                                                return { ...d, title: change.target.value }
+                                            }
+
+                                            return d
+                                        }),
+                                    )
+                                }
                             }}
                             value={title}
                             maxLength={22}
@@ -85,7 +109,7 @@ const Home: React.FunctionComponent = () => {
                         <h1>JsRamverk</h1>
                     )}
                 </div>
-                {id && (
+                {/* {id && (
                     <button
                         data-testid="saveButton"
                         onClick={() => {
@@ -96,9 +120,9 @@ const Home: React.FunctionComponent = () => {
                     >
                         Save
                     </button>
-                )}
+                )} */}
             </Header>
-            <Tools doc={doc} title={title} />
+            <Tools allDocs={allDocs} doc={doc} />
             <Main>
                 {id ? (
                     <ReactQuill
@@ -111,6 +135,18 @@ const Home: React.FunctionComponent = () => {
                                 title,
                                 content: value,
                             })
+
+                            if (allDocs !== null) {
+                                setAllDocs(
+                                    allDocs.map((d) => {
+                                        if (d._id === id) {
+                                            return { ...d, content: value }
+                                        }
+
+                                        return d
+                                    }),
+                                )
+                            }
                         }}
                     />
                 ) : (
@@ -123,7 +159,7 @@ const Home: React.FunctionComponent = () => {
                     const out = await logout()
 
                     if (out.info) {
-                        history.push('/')
+                        history.push(root)
                     }
                 }}
             >
