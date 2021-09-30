@@ -3,14 +3,10 @@ import styled from 'styled-components'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import socket from '../sockets'
+import { Doc } from '../hooks/useSocket'
 
 type Props = {
-    doc: {
-        _id: string
-        title: string
-        content: string
-        access: string[]
-    } | null
+    doc: Doc | null
     onClose: () => void
 }
 
@@ -33,8 +29,6 @@ const Shared: FunctionComponent<Props> = (props) => {
             const updatedDoc = { ...props.doc, access: props.doc.access.concat(users) }
             socket.emit('updatedAcess', updatedDoc)
         }
-
-        props.onClose()
     }
 
     const removeUser = (username: string) => {

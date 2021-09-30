@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
 import socket from '../sockets'
 
-type Doc = {
+export type Doc = {
     _id: string
     title: string
     content: string
     access: string[]
 }
 
-const useSocket = (name: string) => {
-    const [data, setData] = useState<Doc | null>(null)
+const useSocket = <T = Doc>(name: string) => {
+    const [data, setData] = useState<T | null>(null)
 
     useEffect(() => {
-        socket.on(name, (doc: Doc) => {
+        socket.on(name, (doc: T) => {
             setData(doc)
         })
 
@@ -21,7 +21,7 @@ const useSocket = (name: string) => {
         }
     }, [])
 
-    return data
+    return [data, setData] as const
 }
 
 export default useSocket
