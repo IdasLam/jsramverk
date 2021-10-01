@@ -43,6 +43,7 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
         if (id && Array.isArray(allDocs)) {
             const found = allDocs.filter((document) => document._id === id)
             if (found.length === 0) {
+                setSelectedValue('all')
                 history.push(`${root}doc`)
                 return
             }
