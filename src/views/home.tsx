@@ -18,11 +18,8 @@ function useQuery() {
 
 const Home: React.FunctionComponent = () => {
     const id = useQuery().get('id')
-    const [title, setTitle] = useState('New title')
-    const [content, setContent] = useState<string | undefined>(undefined)
     const [showTitleInput, setShowTitleInput] = useState(false)
     const [allDocs, setAllDocs] = useSocket<Doc[]>('allDocs')
-    const saveDocument = document.save()
     const history = useHistory()
     const [doc, setDoc] = useState<Doc | null>(null)
 
@@ -40,8 +37,6 @@ const Home: React.FunctionComponent = () => {
         id && socket.emit('getDoc', id)
 
         if (!id) {
-            setContent('')
-            setTitle('New title')
             history.push(`${root}doc`)
             return
         }
@@ -50,9 +45,22 @@ const Home: React.FunctionComponent = () => {
     useEffect(() => {
         if (!doc) return
 
-        setTitle(doc.title)
-        setContent(doc.content)
+        console.log(doc.content, 'new changes')
     }, [doc])
+
+    const setData = ({ title, content }: { title?: string; content?: string }) => {
+        if (allDocs !== null) {
+            setAllDocs(
+                allDocs.map((d) => {
+                    if (d._id === id) {
+                        return { ...d, title: title ?? d.title, content: content ?? d.content }
+                    }
+
+                    return d
+                }),
+            )
+        }
+    }
 
     return (
         <Container>
@@ -66,33 +74,24 @@ const Home: React.FunctionComponent = () => {
                             type="text"
                             onBlur={() => {
                                 setShowTitleInput(false)
-                                if (title === '') {
-                                    setTitle('New title')
+
+                                if (doc?.title === '') {
+                                    setData({ title: 'New title' })
+                                    socket.emit('updatedDoc', {
+                                        ...doc,
+                                        title: 'New title',
+                                    })
                                 }
                             }}
                             autoFocus
                             onChange={(change) => {
-                                setTitle(change.target.value)
+                                setData({ title: change.target.value })
                                 socket.emit('updatedDoc', {
-                                    _id: id,
-                                    access: doc?.access,
+                                    ...doc,
                                     title: change.target.value,
-                                    content,
                                 })
-
-                                if (allDocs !== null) {
-                                    setAllDocs(
-                                        allDocs.map((d) => {
-                                            if (d._id === id) {
-                                                return { ...d, title: change.target.value }
-                                            }
-
-                                            return d
-                                        }),
-                                    )
-                                }
                             }}
-                            value={title}
+                            value={doc?.title}
                             maxLength={22}
                         />
                     ) : id ? (
@@ -103,49 +102,24 @@ const Home: React.FunctionComponent = () => {
                                 setShowTitleInput(true)
                             }}
                         >
-                            {title}
+                            {doc?.title}
                         </h1>
                     ) : (
                         <h1>JsRamverk</h1>
                     )}
                 </div>
-                {/* {id && (
-                    <button
-                        data-testid="saveButton"
-                        onClick={() => {
-                            if (id) {
-                                saveDocument.mutate({ id, title, content })
-                            }
-                        }}
-                    >
-                        Save
-                    </button>
-                )} */}
             </Header>
             <Tools allDocs={allDocs} doc={doc} />
             <Main>
                 {id ? (
                     <ReactQuill
-                        value={content}
-                        onChange={(value) => {
-                            setContent(value)
-                            socket.emit('updatedDoc', {
-                                _id: id,
-                                access: doc?.access,
-                                title,
-                                content: value,
-                            })
-
-                            if (allDocs !== null) {
-                                setAllDocs(
-                                    allDocs.map((d) => {
-                                        if (d._id === id) {
-                                            return { ...d, content: value }
-                                        }
-
-                                        return d
-                                    }),
-                                )
+                        value={doc?.content}
+                        onChange={(value, delta, source) => {
+                            if (source === 'user') {
+                                socket.emit('updatedDoc', {
+                                    ...doc,
+                                    content: value,
+                                })
                             }
                         }}
                     />
