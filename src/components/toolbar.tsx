@@ -68,8 +68,6 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
         }
     }, [allDocs])
 
-    console.log(rawData)
-
     return (
         <ToolBar>
             <div>
