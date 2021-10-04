@@ -9,6 +9,7 @@ import Shared from './shared'
 import socket from '../sockets'
 import { Doc } from '../hooks/useSocket'
 import { root } from '../helpers/root'
+import { documentData } from '../helpers/graphql'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -25,9 +26,18 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
     const newDoc = document.save()
     const [displayDeletePromt, setDisplayDeletePromt] = useState(false)
     const history = useHistory()
+    const [displayRaw, setDisplayRaw] = useState(false)
 
     const [selectedValue, setSelectedValue] = useState(id ?? 'all')
     const [displayShared, setDisplayShared] = useState(false)
+    const [rawData, setRawData] = useState<string>('')
+
+    const getRaw = async () => {
+        if (!id) return
+
+        const data = await documentData(id)
+        setRawData(data)
+    }
 
     useEffect(() => {
         socket.emit('login')
@@ -38,6 +48,12 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             setSelectedValue(id)
         }
     }, [id])
+
+    useEffect(() => {
+        if (!displayRaw) return
+
+        getRaw()
+    }, [displayRaw])
 
     useEffect(() => {
         if (id && Array.isArray(allDocs)) {
@@ -51,6 +67,8 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             setSelectedValue(id)
         }
     }, [allDocs])
+
+    console.log(rawData)
 
     return (
         <ToolBar>
@@ -103,6 +121,20 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             >
                 New File
             </ButtonAccept>
+            <Button onClick={() => setDisplayRaw(true)}>Raw-document</Button>
+            {displayRaw && (
+                <section data-testid="popup">
+                    <Popup>
+                        <div>
+                            <h2>Raw-data</h2>
+                            <pre>{rawData}</pre>
+                            <div>
+                                <ButtonDelete onClick={() => setDisplayRaw(false)}>Close</ButtonDelete>
+                            </div>
+                        </div>
+                    </Popup>
+                </section>
+            )}
             {displayDeletePromt && (
                 <section data-testid="popup">
                     <Popup>
@@ -166,6 +198,13 @@ const Popup = styled.div`
             button {
                 width: 50px;
             }
+        }
+
+        pre {
+            text-align: left;
+            background-color: #222222;
+            color: white;
+            padding: 10px 10px;
         }
     }
 `
