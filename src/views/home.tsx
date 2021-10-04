@@ -44,8 +44,6 @@ const Home: React.FunctionComponent = () => {
 
     useEffect(() => {
         if (!doc) return
-
-        console.log(doc.content, 'new changes')
     }, [doc])
 
     const setData = ({ title, content }: { title?: string; content?: string }) => {
