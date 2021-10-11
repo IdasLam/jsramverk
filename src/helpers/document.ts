@@ -1,76 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
 
 // When on localhost use the local api otherwise use azure
 const url = window.location.hostname.includes('localhost')
     ? 'http://127.0.0.1:1337'
     : 'https://jsramverk-editor-idla18.azurewebsites.net'
 
-type DocumentType = {
-    _id: string
-    title: string
-    content: string
-}
-
-type GetAll = {
-    isAllDocumentsLoading: boolean
-    refetchAll: () => void
-    allDocumentsError: unknown
-    allDocuments: DocumentType[]
-}
-
 const ALL_DOCS = 'ALL_DOCS'
-
-export const getAll = (): GetAll => {
-    const {
-        isLoading: isAllDocumentsLoading,
-        refetch: refetchAll,
-        error: allDocumentsError,
-        data: allDocuments,
-    } = useQuery(ALL_DOCS, () => {
-        return fetch(`${url}/document/all`, {
-            credentials: 'include',
-        })
-            .then((res) => res.json())
-            .then(({ data }) => data)
-    })
-
-    return { isAllDocumentsLoading, refetchAll, allDocumentsError, allDocuments }
-}
-
-type GetOne = {
-    isOneDocumentLoading: boolean
-    oneDocumentError: unknown
-    oneDocument: DocumentType
-}
-
-export const getOne = (id: string | null): GetOne => {
-    const {
-        isLoading: isOneDocumentLoading,
-        error: oneDocumentError,
-        data: oneDocument,
-    } = useQuery(
-        [ALL_DOCS, id],
-        () => {
-            return fetch(`${url}/document/find`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    id,
-                }),
-            })
-                .then((res) => res.json())
-                .then(({ data }) => data)
-        },
-        {
-            enabled: !!id,
-        },
-    )
-
-    return { isOneDocumentLoading, oneDocumentError, oneDocument }
-}
 
 type Document = {
     id?: string
@@ -106,41 +41,25 @@ export const save = () => {
     )
 }
 
-// export const newDocument = () => {
-//     const queryClient = useQueryClient()
-//     return useMutation(
-//         ALL_DOCS,
-//         () =>
-//             fetch('http://127.0.0.1:1337/document/new')
-//                 .then((res) => res.json())
-//                 .then(({ data }) => data),
-//         {
-//             onSuccess: () => {
-//                 queryClient.invalidateQueries('document/new')
-//             },
-//         },
-//     )
-// }
-
-export const deleteDocument = () => {
-    const queryClient = useQueryClient()
-    return useMutation(
-        ALL_DOCS,
-        (id: string) =>
-            fetch(`${url}/document/delete`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    _id: id,
-                }),
-            }),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(ALL_DOCS)
-            },
+export const pdfBuffer = async (filename: string) => {
+    return fetch(`${url}/document/download-pdf`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'content-type': 'application/json',
         },
-    )
+        body: JSON.stringify({
+            _id: '6156ee9b13757c214d6be2e9',
+        }),
+    })
+        .then((response) => response.blob())
+        .then((blob) => {
+            const url = window.URL.createObjectURL(new Blob([blob]))
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${filename}.pdf`
+            document.body.appendChild(a) // we need to append the element to the dom -> otherwise it will not work in firefox
+            a.click()
+            a.remove()
+        })
 }
