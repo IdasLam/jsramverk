@@ -32,6 +32,10 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
     const [displayShared, setDisplayShared] = useState(false)
     const [rawData, setRawData] = useState<string>('')
 
+    const download = async () => {
+        await document.pdfBuffer(currentDoc?.title ?? 'file')
+    }
+
     const getRaw = async () => {
         if (!id) return
 
@@ -106,6 +110,8 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                         Delete
                     </ButtonDelete>
                     <Button onClick={() => setDisplayShared(true)}>Share</Button>
+                    <Button onClick={() => setDisplayRaw(true)}>Raw-document</Button>
+                    <Button onClick={() => download()}>Download</Button>
                 </>
             )}
             <ButtonAccept
@@ -119,7 +125,6 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             >
                 New File
             </ButtonAccept>
-            <Button onClick={() => setDisplayRaw(true)}>Raw-document</Button>
             {displayRaw && (
                 <section data-testid="popup">
                     <Popup>
