@@ -43,7 +43,7 @@ const Shared: FunctionComponent<Props> = (props) => {
                 <div className="share-doc">
                     <TextField
                         id="outlined-basic"
-                        label="Username, comma seperated"
+                        label="Email, comma seperated"
                         variant="outlined"
                         onChange={(event) => setUsernames(event.target.value)}
                     />

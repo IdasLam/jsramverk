@@ -15,12 +15,20 @@ const Login = () => {
     const history = useHistory()
 
     useEffect(() => {
-        if (data.password.length > 0 && data.username.length > 0) {
+        const email = validateEmail(data.username)
+
+        if (data.password.length > 0 && email) {
             setValid(true)
         } else {
             setValid(false)
         }
     }, [data])
+
+    const validateEmail = (email: string) => {
+        const re =
+            /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        return re.test(email)
+    }
 
     return (
         <>
@@ -29,7 +37,7 @@ const Login = () => {
                     <h1>Register</h1>
                     <TextField
                         id="outlined-basic"
-                        label="Username"
+                        label="Email"
                         variant="outlined"
                         onChange={(event) => setData({ ...data, username: event.target.value.replace(/\s+/g, '') })}
                     />
@@ -60,7 +68,7 @@ const Login = () => {
                     <h1>Login</h1>
                     <TextField
                         id="outlined-basic"
-                        label="Username"
+                        label="Email"
                         variant="outlined"
                         onChange={(event) => setData({ ...data, username: event.target.value.replace(/\s+/g, '') })}
                     />
