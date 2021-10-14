@@ -18,10 +18,11 @@ function useQuery() {
 type ToolsProps = {
     allDocs: Doc[] | null
     doc: Doc | null
+    setDoc: React.Dispatch<React.SetStateAction<Doc | null>>
 }
 
 const Tools: FunctionComponent<ToolsProps> = (props) => {
-    const { allDocs, doc: currentDoc } = props
+    const { allDocs, doc: currentDoc, setDoc } = props
     const id = useQuery().get('id')
     const newDoc = document.save()
     const [displayDeletePromt, setDisplayDeletePromt] = useState(false)
@@ -111,6 +112,13 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
                     </ButtonDelete>
                     <Button onClick={() => setDisplayShared(true)}>Share</Button>
                     <Button onClick={() => setDisplayRaw(true)}>Raw-document</Button>
+                    <Button
+                        onClick={() => {
+                            socket.emit('changeType', currentDoc)
+                        }}
+                    >
+                        {currentDoc?.type === 'text' ? 'code mode' : 'text mode'}
+                    </Button>
                     <Button onClick={() => download()}>Download</Button>
                 </>
             )}
