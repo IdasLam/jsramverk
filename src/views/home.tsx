@@ -10,6 +10,8 @@ import socket from '../sockets'
 import { useHistory } from 'react-router-dom'
 import { logout } from '../helpers/login'
 import { root } from '../helpers/root'
+import MonacoEditor from 'react-monaco-editor'
+import { executeCode } from '../helpers/document'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
@@ -21,6 +23,7 @@ const Home: React.FunctionComponent = () => {
     const [allDocs, setAllDocs] = useSocket<Doc[]>('allDocs')
     const history = useHistory()
     const [doc, setDoc] = useState<Doc | null>(null)
+    const [executedResponse, setExecutedResponse] = useState<string>('')
 
     useEffect(() => {
         if (allDocs === null) return
@@ -34,6 +37,7 @@ const Home: React.FunctionComponent = () => {
 
     useEffect(() => {
         id && socket.emit('getDoc', id)
+        setExecutedResponse('')
 
         if (!id) {
             history.push(`${root}doc`)
@@ -106,20 +110,57 @@ const Home: React.FunctionComponent = () => {
                     )}
                 </div>
             </Header>
-            <Tools allDocs={allDocs} doc={doc} />
+            <Tools allDocs={allDocs} doc={doc} setDoc={setDoc} />
             <Main>
                 {id ? (
-                    <ReactQuill
-                        value={doc?.content}
-                        onChange={(value, delta, source) => {
-                            if (source === 'user') {
-                                socket.emit('updatedDoc', {
-                                    ...doc,
-                                    content: value,
-                                })
-                            }
-                        }}
-                    />
+                    doc?.type === 'text' ? (
+                        <ReactQuill
+                            value={doc?.content}
+                            onChange={(value, delta, source) => {
+                                if (source === 'user') {
+                                    socket.emit('updatedDoc', {
+                                        ...doc,
+                                        content: value,
+                                    })
+                                }
+                            }}
+                        />
+                    ) : doc?.type === 'code' ? (
+                        <>
+                            <Editor>
+                                <MonacoEditor
+                                    value={doc.code}
+                                    language="javascript"
+                                    theme="vs-dark"
+                                    height="50vh"
+                                    width="100%"
+                                    onChange={(value) => {
+                                        // update locally
+                                        setDoc({ ...doc, code: value })
+                                        socket.emit('updatedDoc', {
+                                            ...doc,
+                                            code: value,
+                                        })
+                                    }}
+                                />
+                                <pre className="output">
+                                    <p>Output:</p>
+                                    <p>{executedResponse}</p>
+                                </pre>
+                            </Editor>
+
+                            <Button
+                                execute
+                                onClick={async () => {
+                                    const res = await executeCode(doc.code)
+                                    console.log(res)
+                                    setExecutedResponse(res)
+                                }}
+                            >
+                                Execute code
+                            </Button>
+                        </>
+                    ) : null
                 ) : (
                     <h2>Please choose a document</h2>
                 )}
@@ -140,10 +181,26 @@ const Home: React.FunctionComponent = () => {
     )
 }
 
-const Button = styled.button`
+const Editor = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    .output {
+        background-color: #313131;
+        padding: 0px 20px;
+        color: white;
+        margin: unset;
+
+        p:nth-child(2) {
+            font-weight: bold;
+        }
+    }
+`
+
+const Button = styled.button<{ execute?: boolean }>`
     position: absolute;
-    bottom: 5%;
-    right: 5%;
+    bottom: ${(props) => (props.execute ? '30%' : '5%')};
+    right: ${(props) => (props.execute ? '52%' : '5%')};
     background-color: #ffffff94;
     border: 1px solid whitesmoke;
     border-radius: 4px;
