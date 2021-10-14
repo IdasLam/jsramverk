@@ -63,3 +63,19 @@ export const pdfBuffer = async (filename: string) => {
             a.remove()
         })
 }
+
+export const executeCode = (data: string) => {
+    return fetch('https://execjs.emilfolino.se/code', {
+        body: JSON.stringify({ code: btoa(data) }),
+        headers: {
+            'content-type': 'application/json',
+        },
+        method: 'POST',
+    })
+        .then((response) => {
+            return response.json()
+        })
+        .then((result) => {
+            return atob(result.data)
+        })
+}
