@@ -6,6 +6,8 @@ export type Doc = {
     title: string
     content: string
     access: string[]
+    type: 'text' | 'code'
+    code: string
 }
 
 const useSocket = <T = Doc>(name: string) => {
