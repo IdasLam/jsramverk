@@ -11,13 +11,15 @@ type Document = {
     id?: string
     title: string
     content: string
+    code: string
+    type?: 'code' | 'text'
 }
 
 export const save = () => {
     const queryClient = useQueryClient()
     return useMutation(
         ALL_DOCS,
-        ({ id, title, content }: Document) => {
+        ({ id, title, content, code }: Document) => {
             return fetch(`${url}/document/save`, {
                 method: 'POST',
                 headers: {
@@ -28,6 +30,7 @@ export const save = () => {
                     _id: id,
                     title,
                     content,
+                    code,
                 }),
             })
                 .then((res) => res.json())
