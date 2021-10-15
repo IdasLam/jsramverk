@@ -125,7 +125,7 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
             <ButtonAccept
                 data-testid="newDoc"
                 onClick={() => {
-                    newDoc.mutateAsync({ title: 'New title', content: '' }).then((data) => {
+                    newDoc.mutateAsync({ title: 'New title', content: '', code: '' }).then((data) => {
                         history.push('?id=' + data._id)
                         socket.emit('create', data._id)
                     })
