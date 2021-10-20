@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import socket from '../sockets'
 
+export type Comment = {
+    selected: string
+    y: number
+    comment: string
+    user: string
+    date: string
+}
+
 export type Doc = {
     _id: string
     title: string
@@ -8,6 +16,7 @@ export type Doc = {
     access: string[]
     type: 'text' | 'code'
     code: string
+    comments?: Comment[]
 }
 
 const useSocket = <T = Doc>(name: string) => {
