@@ -13,6 +13,7 @@ import { root } from '../helpers/root'
 import MonacoEditor from 'react-monaco-editor'
 import { executeCode } from '../helpers/document'
 import CommentOption from '../components/comment'
+import Comments from '../components/comments'
 
 const Inline = Quill.import('blots/inline')
 
@@ -54,11 +55,10 @@ const Home: React.FunctionComponent = () => {
         y: 0,
         data: null,
     })
-    // const [range, setRange] = useState<any>({ start: 0, end: 0 })
 
     useEffect(() => {
         if (allDocs === null) return
-
+        console.log(allDocs.find((d) => d._id === id))
         setDoc(allDocs.find((d) => d._id === id) || null)
     }, [allDocs])
 
@@ -94,6 +94,8 @@ const Home: React.FunctionComponent = () => {
             )
         }
     }
+
+    console.log(doc)
 
     return (
         <Container>
@@ -146,46 +148,49 @@ const Home: React.FunctionComponent = () => {
             <Main>
                 {id ? (
                     doc?.type === 'text' ? (
-                        <div
-                            onContextMenu={(event) => {
-                                event?.preventDefault()
+                        <div className={!!doc.comments?.length ? 'commentRow' : ''}>
+                            <div
+                                onContextMenu={(event) => {
+                                    event?.preventDefault()
 
-                                const selected = window.getSelection()
-                                if (selected?.toString()) {
-                                    setCommentContext({
-                                        ...commentContext,
-                                        display: true,
-                                        x: event.clientX,
-                                        y: event.clientY,
-                                        data: {
-                                            selected: selected?.toString(),
+                                    const selected = window.getSelection()
+                                    if (selected?.toString()) {
+                                        setCommentContext({
+                                            ...commentContext,
+                                            display: true,
+                                            x: event.clientX,
                                             y: event.clientY,
-                                            start: (window as any).startRangeComment,
-                                            end: (window as any).endRangeComment,
-                                        },
-                                    })
-                                }
-                            }}
-                        >
-                            <ReactQuill
-                                modules={{ clipboard: { matchVisual: false } }}
-                                onChangeSelection={(range, source) => {
-                                    if (source === 'user' && range) {
-                                        ;(window as any).startRangeComment = range?.index
-                                        ;(window as any).endRangeComment = range?.index + range?.length
-                                    }
-                                }}
-                                value={doc?.content}
-                                onChange={(value, delta, source) => {
-                                    if (source === 'user') {
-                                        setDoc({ ...doc, content: value })
-                                        socket.emit('updatedDoc', {
-                                            ...doc,
-                                            content: value,
+                                            data: {
+                                                selected: selected?.toString(),
+                                                y: event.clientY,
+                                                start: (window as any).startRangeComment,
+                                                end: (window as any).endRangeComment,
+                                            },
                                         })
                                     }
                                 }}
-                            />
+                            >
+                                <ReactQuill
+                                    modules={{ clipboard: { matchVisual: false } }}
+                                    onChangeSelection={(range, source) => {
+                                        if (source === 'user' && range) {
+                                            ;(window as any).startRangeComment = range?.index
+                                            ;(window as any).endRangeComment = range?.index + range?.length
+                                        }
+                                    }}
+                                    value={doc?.content}
+                                    onChange={(value, delta, source) => {
+                                        if (source === 'user') {
+                                            setDoc({ ...doc, content: value })
+                                            socket.emit('updatedDoc', {
+                                                ...doc,
+                                                content: value,
+                                            })
+                                        }
+                                    }}
+                                />
+                            </div>
+                            {!!doc.comments?.length && <Comments comments={doc.comments} content={doc.content} />}
                         </div>
                     ) : doc?.type === 'code' ? (
                         <>
@@ -356,6 +361,11 @@ const Main = styled.main`
 
     comment {
         background-color: #c7fd93;
+    }
+
+    .commentRow {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
     }
 `
 
