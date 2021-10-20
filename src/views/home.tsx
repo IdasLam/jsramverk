@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import ReactQuill from 'react-quill'
+import ReactQuill, { Quill } from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import Tools from '../components/toolbar'
 import { useEffect } from 'react'
@@ -12,9 +12,32 @@ import { logout } from '../helpers/login'
 import { root } from '../helpers/root'
 import MonacoEditor from 'react-monaco-editor'
 import { executeCode } from '../helpers/document'
+import CommentOption from '../components/comment'
+
+const Inline = Quill.import('blots/inline')
+
+class Comment extends Inline {}
+Comment.blotName = 'comment'
+Comment.tagName = 'comment'
+Quill.register(Comment)
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)
+}
+
+type CommentData = {
+    selected: string
+    y: number
+    start: number
+    end: number
+}
+
+type CommentContext = {
+    display: boolean
+    x: number
+    y: number
+    data: CommentData | null
+    id: string | null
 }
 
 const Home: React.FunctionComponent = () => {
@@ -24,6 +47,14 @@ const Home: React.FunctionComponent = () => {
     const history = useHistory()
     const [doc, setDoc] = useState<Doc | null>(null)
     const [executedResponse, setExecutedResponse] = useState<string>('')
+    const [commentContext, setCommentContext] = useState<CommentContext>({
+        id: id,
+        display: false,
+        x: 0,
+        y: 0,
+        data: null,
+    })
+    // const [range, setRange] = useState<any>({ start: 0, end: 0 })
 
     useEffect(() => {
         if (allDocs === null) return
@@ -43,6 +74,7 @@ const Home: React.FunctionComponent = () => {
             history.push(`${root}doc`)
             return
         }
+        setCommentContext({ ...commentContext, id: id })
     }, [id])
 
     useEffect(() => {
@@ -114,17 +146,47 @@ const Home: React.FunctionComponent = () => {
             <Main>
                 {id ? (
                     doc?.type === 'text' ? (
-                        <ReactQuill
-                            value={doc?.content}
-                            onChange={(value, delta, source) => {
-                                if (source === 'user') {
-                                    socket.emit('updatedDoc', {
-                                        ...doc,
-                                        content: value,
+                        <div
+                            onContextMenu={(event) => {
+                                event?.preventDefault()
+
+                                const selected = window.getSelection()
+                                if (selected?.toString()) {
+                                    setCommentContext({
+                                        ...commentContext,
+                                        display: true,
+                                        x: event.clientX,
+                                        y: event.clientY,
+                                        data: {
+                                            selected: selected?.toString(),
+                                            y: event.clientY,
+                                            start: (window as any).startRangeComment,
+                                            end: (window as any).endRangeComment,
+                                        },
                                     })
                                 }
                             }}
-                        />
+                        >
+                            <ReactQuill
+                                modules={{ clipboard: { matchVisual: false } }}
+                                onChangeSelection={(range, source) => {
+                                    if (source === 'user' && range) {
+                                        ;(window as any).startRangeComment = range?.index
+                                        ;(window as any).endRangeComment = range?.index + range?.length
+                                    }
+                                }}
+                                value={doc?.content}
+                                onChange={(value, delta, source) => {
+                                    if (source === 'user') {
+                                        setDoc({ ...doc, content: value })
+                                        socket.emit('updatedDoc', {
+                                            ...doc,
+                                            content: value,
+                                        })
+                                    }
+                                }}
+                            />
+                        </div>
                     ) : doc?.type === 'code' ? (
                         <>
                             <Editor>
@@ -153,7 +215,6 @@ const Home: React.FunctionComponent = () => {
                                 execute
                                 onClick={async () => {
                                     const res = await executeCode(doc.code)
-                                    console.log(res)
                                     setExecutedResponse(res)
                                 }}
                             >
@@ -163,6 +224,16 @@ const Home: React.FunctionComponent = () => {
                     ) : null
                 ) : (
                     <h2>Please choose a document</h2>
+                )}
+                {commentContext.display && (
+                    <CommentOption
+                        id={commentContext.id}
+                        x={commentContext.x}
+                        y={commentContext.y}
+                        data={commentContext.data}
+                        text={doc?.content}
+                        onClose={() => setCommentContext({ ...commentContext, display: false, x: 0, y: 0, data: null })}
+                    />
                 )}
             </Main>
             <Button
@@ -281,6 +352,10 @@ const Main = styled.main`
 
     .quill {
         background-color: white;
+    }
+
+    comment {
+        background-color: #c7fd93;
     }
 `
 
