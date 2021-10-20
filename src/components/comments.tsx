@@ -26,7 +26,7 @@ const Comments: React.FunctionComponent<Comments> = ({ comments, content }) => {
             <div>
                 {allComments?.map((comment) => {
                     return (
-                        <CommentContainer>
+                        <CommentContainer key={comment._id}>
                             <div>
                                 <p>
                                     {comment.user} commented on: '{comment.selected}'
