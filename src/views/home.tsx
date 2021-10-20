@@ -17,7 +17,22 @@ import Comments from '../components/comments'
 
 const Inline = Quill.import('blots/inline')
 
-class Comment extends Inline {}
+// https://quilljs.com/guides/cloning-medium-with-parchment/
+class Comment extends Inline {
+    static create(value: any) {
+        const node = super.create()
+        // Sanitize url value if desired
+        node.setAttribute('id', value)
+        return node
+    }
+
+    static formats(node: any) {
+        // We will only be called with a node already
+        // determined to be a Link blot, so we do
+        // not need to check ourselves
+        return node.getAttribute('id')
+    }
+}
 Comment.blotName = 'comment'
 Comment.tagName = 'comment'
 Quill.register(Comment)
@@ -173,13 +188,15 @@ const Home: React.FunctionComponent = () => {
                                 <ReactQuill
                                     modules={{ clipboard: { matchVisual: false } }}
                                     onChangeSelection={(range, source) => {
+                                        console.log(range)
                                         if (source === 'user' && range) {
                                             ;(window as any).startRangeComment = range?.index
                                             ;(window as any).endRangeComment = range?.index + range?.length
                                         }
                                     }}
                                     value={doc?.content}
-                                    onChange={(value, delta, source) => {
+                                    onChange={(value, delta, source, editor) => {
+                                        console.log({ html: editor.getHTML(), textt: editor.getText() })
                                         if (source === 'user') {
                                             setDoc({ ...doc, content: value })
                                             socket.emit('updatedDoc', {
