@@ -19,7 +19,7 @@ type CommentData = {
     end: number
 }
 
-const CommentOption: React.FC<Comment> = ({ x, y, text, onClose, data, id }) => {
+const CommentOption: React.FC<Comment> = ({ x, y, onClose, data, id }) => {
     const [comment, setCommet] = useState<string>()
 
     return (
@@ -30,10 +30,10 @@ const CommentOption: React.FC<Comment> = ({ x, y, text, onClose, data, id }) => 
                 <Button
                     variant="contained"
                     onClick={() => {
-                        // console.log({text: })
-                        console.log({ id, text, data: { ...data, comment: comment } })
-                        // socket.emit('comment', { id, data: { ...data, comment: comment } })
+                        socket.emit('comment', { id, data: { ...data, comment: comment } })
+
                         // also close comment
+                        onClose()
                     }}
                 >
                     Comment
