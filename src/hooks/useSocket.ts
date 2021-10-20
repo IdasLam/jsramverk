@@ -7,6 +7,7 @@ export type Comment = {
     comment: string
     user: string
     date: string
+    _id: string
 }
 
 export type Doc = {
