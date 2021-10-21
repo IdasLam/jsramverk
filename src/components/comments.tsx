@@ -8,7 +8,6 @@ type Comments = {
 }
 
 const Comments: React.FunctionComponent<Comments> = ({ comments, content }) => {
-    console.log(comments, content)
     const [allComments, setAllComments] = useState<Comment[]>()
 
     useEffect(() => {
