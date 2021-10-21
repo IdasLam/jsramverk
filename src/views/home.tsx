@@ -67,6 +67,7 @@ const Home: React.FunctionComponent = () => {
         y: 0,
         data: null,
     })
+    const [allComments, setAllComments] = useState<Comment[]>([])
 
     useEffect(() => {
         if (allDocs === null) return
@@ -91,6 +92,10 @@ const Home: React.FunctionComponent = () => {
 
     useEffect(() => {
         if (!doc) return
+
+        if (doc.comments) {
+            setAllComments(doc.comments.filter((comment) => doc.content.includes(comment._id)))
+        }
     }, [doc])
 
     const setData = ({ title, content }: { title?: string; content?: string }) => {
@@ -200,7 +205,7 @@ const Home: React.FunctionComponent = () => {
                                     }}
                                 />
                             </div>
-                            {!!doc.comments?.length && <Comments comments={doc.comments} content={doc.content} />}
+                            {!!allComments.length && <Comments comments={allComments} content={doc.content} />}
                         </div>
                     ) : doc?.type === 'code' ? (
                         <>
