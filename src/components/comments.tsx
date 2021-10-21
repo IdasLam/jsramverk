@@ -16,7 +16,7 @@ const Comments: React.FunctionComponent<Comments> = ({ comments, content }) => {
         filteredComments.sort((a, b) => {
             return a.y - b.y
         })
-        console.log(filteredComments, 'fikltered')
+
         setAllComments(filteredComments)
     }, [comments])
 

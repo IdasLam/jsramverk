@@ -27,9 +27,6 @@ class Comment extends Inline {
     }
 
     static formats(node: any) {
-        // We will only be called with a node already
-        // determined to be a Link blot, so we do
-        // not need to check ourselves
         return node.getAttribute('id')
     }
 }
@@ -110,8 +107,6 @@ const Home: React.FunctionComponent = () => {
         }
     }
 
-    console.log(doc)
-
     return (
         <Container>
             <Header>
@@ -188,15 +183,13 @@ const Home: React.FunctionComponent = () => {
                                 <ReactQuill
                                     modules={{ clipboard: { matchVisual: false } }}
                                     onChangeSelection={(range, source) => {
-                                        console.log(range)
                                         if (source === 'user' && range) {
                                             ;(window as any).startRangeComment = range?.index
                                             ;(window as any).endRangeComment = range?.index + range?.length
                                         }
                                     }}
                                     value={doc?.content}
-                                    onChange={(value, delta, source, editor) => {
-                                        console.log({ html: editor.getHTML(), textt: editor.getText() })
+                                    onChange={(value, delta, source) => {
                                         if (source === 'user') {
                                             setDoc({ ...doc, content: value })
                                             socket.emit('updatedDoc', {
