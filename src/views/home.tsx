@@ -163,7 +163,7 @@ const Home: React.FunctionComponent = () => {
             <Main>
                 {id ? (
                     doc?.type === 'text' ? (
-                        <div className={!!doc.comments?.length ? 'commentRow' : ''}>
+                        <div className={!!allComments.length ? 'commentRow' : ''}>
                             <div
                                 onContextMenu={(event) => {
                                     event?.preventDefault()
