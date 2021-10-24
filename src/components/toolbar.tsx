@@ -34,7 +34,9 @@ const Tools: FunctionComponent<ToolsProps> = (props) => {
     const [rawData, setRawData] = useState<string>('')
 
     const download = async () => {
-        await document.pdfBuffer(currentDoc?.title ?? 'file')
+        if (currentDoc) {
+            await document.pdfBuffer(currentDoc?.title, currentDoc?._id)
+        }
     }
 
     const getRaw = async () => {

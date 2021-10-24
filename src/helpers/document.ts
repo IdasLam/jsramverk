@@ -44,7 +44,7 @@ export const save = () => {
     )
 }
 
-export const pdfBuffer = async (filename: string) => {
+export const pdfBuffer = async (filename: string, id: string) => {
     return fetch(`${url}/document/download-pdf`, {
         method: 'POST',
         credentials: 'include',
@@ -52,7 +52,7 @@ export const pdfBuffer = async (filename: string) => {
             'content-type': 'application/json',
         },
         body: JSON.stringify({
-            _id: '6156ee9b13757c214d6be2e9',
+            _id: id,
         }),
     })
         .then((response) => response.blob())
